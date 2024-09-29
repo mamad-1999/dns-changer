@@ -18,7 +18,7 @@ A Go script to select and apply a DNS server in Linux.
 ```bash
 go install github.com/mamad-1999/dns-changer@latest
 ```
-3. Run the script
+2. Run the script
    
 ```bash
 dns-changer
