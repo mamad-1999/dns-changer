@@ -2,6 +2,9 @@
 
 A Go script to select and apply a DNS server in Linux.
 
+![Dns-changer](https://github.com/user-attachments/assets/af03f351-0922-4fd6-98c2-265781c60c5b)
+
+
 ## Features
 
 - List available DNS servers.
