@@ -15,16 +15,44 @@
 ```bash
 go install github.com/mamad-1999/dns-changer@latest
 ```
+> [!IMPORTANT]
+> Backup: It's a good idea to back up your existing `/etc/resolv.conf` before running the script:
+> ```bash
+> sudo cp /etc/resolv.conf /etc/resolv.conf.backup
+> ```
 
 ## Usage
    
 ```bash
 dns-changer
 ```
-**You can add custom or other DNS entries in the config.json file.**
 
-**After the first use, config.json will be downloaded and saved in your home directory.**
+> [!TIP]
+> You can add custom or other DNS entries in the `config.json` file.
+> 
+> After the first use, `config.json` will be downloaded and saved in your home directory.
 
+> [!NOTE]
+> **Network Manager Configuration**: If you find that your changes are being overwritten, you may need to configure your network manager to stop updating /etc/resolv.conf.
+For example:
+#### Option 1:
+- NetworkManager: Edit `/etc/NetworkManager/NetworkManager.conf` and set `dns=none` under the `[main]` section.
+- systemd-resolved: You might need to disable it or configure it to use the DNS servers you want.
+
+After making changes to network manager configurations, restart the service:
+
+```bash
+sudo systemctl restart NetworkManager
+```
+or
+```bash
+sudo systemctl restart systemd-resolved
+```
+#### Option 2
+- Just do this:
+```bash
+unlink /etc/resolv.conf 
+```
 ## Contributing
 
 Contributions to Fallparams are welcome! 
