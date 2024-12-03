@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
@@ -20,7 +21,22 @@ type DnsConfig struct {
 }
 
 func main() {
-	configPath := "config.json"
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		color.Red("Error finding home directory: %s", err)
+		return
+	}
+
+	configDir := filepath.Join(homeDir, ".config", "dns-changer")
+	configPath := filepath.Join(configDir, "config.json")
+
+	// Ensure the config directory exists
+	if _, err := os.Stat(configDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			color.Red("Error creating config directory: %s", err)
+			return
+		}
+	}
 
 	// Check if config.json exists locally
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
