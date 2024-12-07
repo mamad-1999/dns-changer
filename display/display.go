@@ -110,5 +110,4 @@ func DisplayDnsOptions(dnsConfigs []config.DnsConfig) {
 
 	t.SetStyle(table.StyleLight)
 	t.Render()
-	fmt.Println("0. Exit")
 }

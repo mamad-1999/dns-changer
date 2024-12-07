@@ -2,7 +2,6 @@ package dns
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +12,55 @@ import (
 	"github.com/mamad-1999/dns-changer/constants"
 	"github.com/mamad-1999/dns-changer/utils"
 )
+
+// IsResolvManagedByNetworkManager checks if /etc/resolv.conf is symlinked and managed by NetworkManager
+func IsResolvManagedByNetworkManager() bool {
+	// Check if /etc/resolv.conf is a symlink
+	resolvPath := "/etc/resolv.conf"
+	target, err := os.Readlink(resolvPath)
+	if err != nil {
+		return false
+	}
+
+	// Check if the symlink points to a location managed by NetworkManager or systemd
+	if strings.Contains(target, "NetworkManager") || strings.Contains(target, "systemd") {
+		return true
+	}
+	return false
+}
+
+// HandleResolvConfManagement checks if resolv.conf is managed by NetworkManager and asks the user for action
+func HandleResolvConfManagement() error {
+	// Check if /etc/resolv.conf is managed by NetworkManager
+	if IsResolvManagedByNetworkManager() {
+		// Inform the user about the situation
+		color.Yellow("It seems that /etc/resolv.conf is managed by NetworkManager or systemd. This may overwrite changes you make to DNS settings.")
+
+		// Ask the user if they want to unlink it
+		color.Cyan("Do you want to unlink /etc/resolv.conf to prevent it from being overwritten? (yes/no)")
+		var response string
+		fmt.Scanln(&response)
+
+		// Handle user's choice
+		if strings.ToLower(response) == "yes" {
+			// Perform the unlink operation with sudo
+			cmd := exec.Command("sudo", "unlink", "/etc/resolv.conf")
+			err := cmd.Run()
+			if err != nil {
+				utils.HandleError(err, "Error unlinking /etc/resolv.conf", true)
+			}
+
+			// Inform the user of success
+			color.Green("Successfully unlinked /etc/resolv.conf. You can now safely change DNS settings.")
+		} else {
+			color.Red("You chose not to unlink /etc/resolv.conf. DNS changes may be overwritten by NetworkManager.")
+		}
+	} else {
+		color.Green("/etc/resolv.conf is not managed by NetworkManager. You can safely change DNS settings.")
+	}
+
+	return nil
+}
 
 // BackupResolvFile creates a backup of /etc/resolv.conf in the backup directory
 func BackupResolvFile() error {
@@ -25,7 +73,7 @@ func BackupResolvFile() error {
 	utils.HandleError(err, "Error creating backup directory", true)
 
 	// Read the current resolv.conf file
-	content, err := ioutil.ReadFile("/etc/resolv.conf")
+	content, err := os.ReadFile("/etc/resolv.conf")
 	if err != nil {
 		utils.HandleError(err, "Error reading /etc/resolv.conf", true)
 	}
@@ -34,7 +82,7 @@ func BackupResolvFile() error {
 	backupPath := filepath.Join(backupDir, constants.BackupFile)
 
 	// Write the content to the backup file (this will overwrite the existing backup)
-	err = ioutil.WriteFile(backupPath, content, 0644)
+	err = os.WriteFile(backupPath, content, 0644)
 	if err != nil {
 		utils.HandleError(err, "Error writing backup of resolv.conf", true)
 	}

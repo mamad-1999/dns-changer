@@ -33,6 +33,11 @@ func main() {
 	dnsConfigs, err := config.LoadDnsConfigs(configPath)
 	utils.HandleError(err, constants.ErrParsingDnsConfig, true)
 
+	// Handle /etc/resolv.conf management (check if it's managed by NetworkManager and ask for user confirmation)
+	err = dns.HandleResolvConfManagement()
+	utils.HandleError(err, "Error handling /etc/resolv.conf management", false)
+
+	// Display DNS options after confirming /etc/resolv.conf management
 	display.DisplayDnsOptions(dnsConfigs)
 
 	reader := bufio.NewReader(os.Stdin)
