@@ -19,6 +19,7 @@ func DisplayDnsOptions(dnsConfigs []config.DnsConfig) {
 		Index      int
 		ServerName string
 		PingTime   string
+		Status     string
 	}
 
 	results := make(chan PingResult, len(dnsConfigs))
@@ -29,11 +30,12 @@ func DisplayDnsOptions(dnsConfigs []config.DnsConfig) {
 		wg.Add(1)
 		go func(i int, serverName string, serverAddress string) {
 			defer wg.Done()
-			pingTime := ping.PingDns(serverAddress)
+			pingRes := ping.PingDns(serverAddress)
 			results <- PingResult{
 				Index:      i + 1,
 				ServerName: serverName,
-				PingTime:   pingTime,
+				PingTime:   pingRes.Time,
+				Status:     pingRes.Status,
 			}
 		}(i, config.Name, config.Servers[0]) // Assume the first server is used for pinging
 	}
@@ -46,7 +48,22 @@ func DisplayDnsOptions(dnsConfigs []config.DnsConfig) {
 
 	// Collect and display results
 	for result := range results {
-		t.AddRow(fmt.Sprintf("%d", result.Index), fmt.Sprintf("%-15s", result.ServerName), fmt.Sprintf("%-20s", result.PingTime))
+		var pingDisplay string
+
+		switch result.Status {
+		case "reachable":
+			pingDisplay = color.GreenString(result.PingTime)
+		case "unreachable":
+			pingDisplay = color.RedString("unreachable")
+		case "unknown":
+			pingDisplay = color.YellowString("unknown")
+		}
+
+		t.AddRow(
+			fmt.Sprintf("%d", result.Index),
+			fmt.Sprintf("%-15s", result.ServerName),
+			fmt.Sprintf("%-20s", pingDisplay),
+		)
 	}
 
 	t.Print()

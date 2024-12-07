@@ -1,17 +1,24 @@
 package ping
 
 import (
-	"fmt"
 	"os/exec"
 	"strings"
 )
 
-func PingDns(server string) string {
+type PingResult struct {
+	Time   string // e.g., "23.4 ms"
+	Status string // e.g., "reachable", "unreachable", "unknown"
+}
+
+func PingDns(server string) PingResult {
 	cmd := exec.Command("ping", "-c", "1", "-W", "1", server)
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
-		return "unreachable"
+		return PingResult{
+			Time:   "N/A",
+			Status: "unreachable",
+		}
 	}
 
 	outputStr := string(output)
@@ -19,8 +26,14 @@ func PingDns(server string) string {
 	for _, line := range lines {
 		if strings.Contains(line, "time=") {
 			parts := strings.Split(line, "time=")
-			return fmt.Sprintf("%s ", parts[1])
+			return PingResult{
+				Time:   parts[1],
+				Status: "reachable",
+			}
 		}
 	}
-	return "unknown"
+	return PingResult{
+		Time:   "N/A",
+		Status: "unknown",
+	}
 }
