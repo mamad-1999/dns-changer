@@ -1,16 +1,16 @@
 package utils
 
 import (
-	"log"
+	"os"
 
 	"github.com/fatih/color"
 )
 
-// HandleError logs the error message and prints a user-friendly message
-func HandleError(err error, msg string) {
+func HandleError(err error, msg string, fatal bool) {
 	if err != nil {
 		color.Red("%s: %s", msg, err)
-		log.Println(err) // Log the error for debugging
-		return
+		if fatal {
+			os.Exit(1) // Exit the program on fatal errors
+		}
 	}
 }

@@ -5,7 +5,7 @@ const ConfigURL = "https://raw.githubusercontent.com/mamad-1999/dns-changer/refs
 
 // Config directory and file names.
 const (
-	ConfigDir  = ".config"
+	ConfigDir  = ".config/dns-changer"
 	ConfigFile = "config.json"
 )
 

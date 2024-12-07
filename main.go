@@ -18,21 +18,20 @@ import (
 
 func main() {
 	homeDir, err := os.UserHomeDir()
-	utils.HandleError(err, constants.ErrFindingHomeDir)
+	utils.HandleError(err, constants.ErrFindingHomeDir, true)
 
-	configDir := filepath.Join(homeDir, constants.ConfigDir, constants.ConfigFile)
-	configPath := filepath.Join(configDir, constants.ConfigFile)
+	configPath := filepath.Join(homeDir, constants.ConfigDir, constants.ConfigFile)
 
 	// Ensure the config directory exists
-	err = config.EnsureConfigDir(configDir)
-	utils.HandleError(err, constants.ErrCreatingConfigDir)
+	err = config.EnsureConfigDir(constants.ConfigDir)
+	utils.HandleError(err, constants.ErrCreatingConfigDir, true)
 
 	// Download or validate the config.json
 	err = config.ValidateConfigFile(configPath)
-	utils.HandleError(err, constants.ErrHandlingConfigFile)
+	utils.HandleError(err, constants.ErrHandlingConfigFile, false)
 
 	dnsConfigs, err := config.LoadDnsConfigs(configPath)
-	utils.HandleError(err, constants.ErrParsingDnsConfig)
+	utils.HandleError(err, constants.ErrParsingDnsConfig, true)
 
 	display.DisplayDnsOptions(dnsConfigs)
 
@@ -41,14 +40,14 @@ func main() {
 	for {
 		fmt.Print(constants.SelectDnsPrompt)
 		input, err := reader.ReadString('\n')
-		utils.HandleError(err, constants.ErrReadingInput)
+		utils.HandleError(err, constants.ErrReadingInput, true)
 
 		// Trim whitespace and newline characters
 		input = strings.TrimSpace(input)
 
 		// Check if input is a number
 		choice, err = strconv.Atoi(input)
-		utils.HandleError(err, constants.ErrInvalidInput)
+		utils.HandleError(err, constants.ErrInvalidInput, true)
 
 		// Validate choice range
 		if choice == 0 {
@@ -68,7 +67,7 @@ func main() {
 	resolvContent := dns.BuildResolvContent(selectedConfig)
 
 	err = dns.WriteToResolv(resolvContent)
-	utils.HandleError(err, constants.ErrWritingToResolv)
+	utils.HandleError(err, constants.ErrWritingToResolv, true)
 
 	color.Green(constants.SuccessDnsChanged, selectedConfig.Name)
 }
