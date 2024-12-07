@@ -34,39 +34,28 @@ func ValidateConfigFile(path string) error {
 
 func DownloadConfig(path string) error {
 	resp, err := http.Get(configURL)
-	if err != nil {
-		utils.HandleError(err, "Failed to download config")
-		return err
-	}
+	utils.HandleError(err, "Failed to download config")
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		err := fmt.Errorf("failed to download config: %s", resp.Status)
 		utils.HandleError(err, "Failed to download config")
-		return err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		utils.HandleError(err, "Failed to read response body")
-		return err
-	}
+	utils.HandleError(err, "Failed to read response body")
 
 	return ioutil.WriteFile(path, body, 0644)
 }
 
 func LoadDnsConfigs(path string) ([]DnsConfig, error) {
 	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		utils.HandleError(err, "Failed to read DNS config file")
-		return nil, err
-	}
+	utils.HandleError(err, "Failed to read DNS config file")
 
 	var dnsConfigs []DnsConfig
-	if err := json.Unmarshal(data, &dnsConfigs); err != nil {
-		utils.HandleError(err, "Failed to parse DNS config file")
-		return nil, err
-	}
+	err = json.Unmarshal(data, &dnsConfigs)
+	utils.HandleError(err, "Failed to parse DNS config file")
 
 	return dnsConfigs, nil
 }

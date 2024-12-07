@@ -23,22 +23,15 @@ func main() {
 	configPath := filepath.Join(configDir, "config.json")
 
 	// Ensure the config directory exists
-	if err := config.EnsureConfigDir(configDir); err != nil {
-		utils.HandleError(err, "Error creating config directory")
-		return
-	}
+	err = config.EnsureConfigDir(configDir)
+	utils.HandleError(err, "Error creating config directory")
 
 	// Download or validate the config.json
-	if err := config.ValidateConfigFile(configPath); err != nil {
-		utils.HandleError(err, "Error handling config.json")
-		return
-	}
+	err = config.ValidateConfigFile(configPath)
+	utils.HandleError(err, "Error handling config.json")
 
 	dnsConfigs, err := config.LoadDnsConfigs(configPath)
-	if err != nil {
-		utils.HandleError(err, "Error parsing DNS config")
-		return
-	}
+	utils.HandleError(err, "Error parsing DNS config")
 
 	display.DisplayDnsOptions(dnsConfigs)
 
@@ -47,20 +40,14 @@ func main() {
 	for {
 		fmt.Print("Select a DNS server by number (or 0 to exit): ")
 		input, err := reader.ReadString('\n')
-		if err != nil {
-			utils.HandleError(err, "Error reading input. Please try again.")
-			continue
-		}
+		utils.HandleError(err, "Error reading input. Please try again.")
 
 		// Trim whitespace and newline characters
 		input = strings.TrimSpace(input)
 
 		// Check if input is a number
 		choice, err = strconv.Atoi(input)
-		if err != nil {
-			utils.HandleError(err, "Invalid input. Please enter a valid number.")
-			continue
-		}
+		utils.HandleError(err, "Invalid input. Please enter a valid number.")
 
 		// Validate choice range
 		if choice == 0 {
@@ -79,10 +66,8 @@ func main() {
 	selectedConfig := dnsConfigs[choice-1]
 	resolvContent := dns.BuildResolvContent(selectedConfig)
 
-	if err := dns.WriteToResolv(resolvContent); err != nil {
-		utils.HandleError(err, "Error writing to /etc/resolv.conf")
-		return
-	}
+	err = dns.WriteToResolv(resolvContent)
+	utils.HandleError(err, "Error writing to /etc/resolv.conf")
 
 	color.Green("Successfully changed DNS to %s", selectedConfig.Name)
 }

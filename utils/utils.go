@@ -11,5 +11,6 @@ func HandleError(err error, msg string) {
 	if err != nil {
 		color.Red("%s: %s", msg, err)
 		log.Println(err) // Log the error for debugging
+		return
 	}
 }

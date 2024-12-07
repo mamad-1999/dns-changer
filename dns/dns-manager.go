@@ -20,9 +20,8 @@ func BuildResolvContent(config config.DnsConfig) string {
 
 func WriteToResolv(content string) error {
 	cmd := exec.Command("sudo", "sh", "-c", fmt.Sprintf("echo '%s' > /etc/resolv.conf", content))
-	if err := cmd.Run(); err != nil {
-		utils.HandleError(err, "Error writing to /etc/resolv.conf")
-		return err
-	}
+	err := cmd.Run()
+	utils.HandleError(err, "Error writing to /etc/resolv.conf")
+
 	return nil
 }
