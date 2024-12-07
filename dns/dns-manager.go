@@ -2,12 +2,46 @@ package dns
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/mamad-1999/dns-changer/config"
+	"github.com/mamad-1999/dns-changer/constants"
 	"github.com/mamad-1999/dns-changer/utils"
 )
+
+// BackupResolvFile creates a backup of /etc/resolv.conf in the backup directory
+func BackupResolvFile() error {
+	homeDir, err := os.UserHomeDir()
+	utils.HandleError(err, "Error finding home directory", true)
+
+	// Create backup directory if it doesn't exist
+	backupDir := filepath.Join(homeDir, constants.BackupDir)
+	err = os.MkdirAll(backupDir, 0755)
+	utils.HandleError(err, "Error creating backup directory", true)
+
+	// Read the current resolv.conf file
+	content, err := ioutil.ReadFile("/etc/resolv.conf")
+	if err != nil {
+		utils.HandleError(err, "Error reading /etc/resolv.conf", true)
+	}
+
+	// Define the backup path (always overwrite the same file)
+	backupPath := filepath.Join(backupDir, constants.BackupFile)
+
+	// Write the content to the backup file (this will overwrite the existing backup)
+	err = ioutil.WriteFile(backupPath, content, 0644)
+	if err != nil {
+		utils.HandleError(err, "Error writing backup of resolv.conf", true)
+	}
+
+	color.Green("Backup of resolv.conf created at: %s", backupPath)
+	return nil
+}
 
 func BuildResolvContent(config config.DnsConfig) string {
 	var resolvContent strings.Builder
@@ -19,8 +53,14 @@ func BuildResolvContent(config config.DnsConfig) string {
 }
 
 func WriteToResolv(content string) error {
+	// Backup the current resolv.conf file before writing
+	err := BackupResolvFile()
+	if err != nil {
+		utils.HandleError(err, "Error backing up resolv.conf", true)
+	}
+
 	cmd := exec.Command("sudo", "sh", "-c", fmt.Sprintf("echo '%s' > /etc/resolv.conf", content))
-	err := cmd.Run()
+	err = cmd.Run()
 	utils.HandleError(err, "Error writing to /etc/resolv.conf", true)
 
 	return nil

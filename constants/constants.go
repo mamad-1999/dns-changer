@@ -7,6 +7,8 @@ const ConfigURL = "https://raw.githubusercontent.com/mamad-1999/dns-changer/refs
 const (
 	ConfigDir  = ".config/dns-changer"
 	ConfigFile = "config.json"
+	BackupDir  = ".config/dns-changer/backups" // New backup directory
+	BackupFile = "resolv.conf.backup"          // Backup filename
 )
 
 // Error messages.

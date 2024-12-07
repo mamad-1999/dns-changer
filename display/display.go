@@ -61,7 +61,7 @@ func DisplayDnsOptions(dnsConfigs []config.DnsConfig) {
 	// Create the table
 	t := table.NewWriter()
 	t.SetOutputMirror(color.Output)
-	t.AppendHeader(table.Row{"Index", "DNS Server", "Server 1 (Ping)", "Server 2 (Ping)"})
+	t.AppendHeader(table.Row{"IN", "DNS Server", "Server 1 (Ping)", "Server 2 (Ping)"})
 
 	// Collect and display results
 	var resultSlice []PingResult
