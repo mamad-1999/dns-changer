@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/rodaine/table"
 )
 
 const configURL = "https://raw.githubusercontent.com/mamad-1999/dns-changer/refs/heads/master/config.json" // Update the URL as needed
@@ -60,7 +61,7 @@ func main() {
 		return
 	}
 
-	// Display the DNS servers
+	// Display the DNS servers with ping results
 	displayDnsOptions(dnsConfigs)
 
 	// Get user input
@@ -91,12 +92,45 @@ func main() {
 	color.Green("Successfully changed DNS to %s", selectedConfig.Name)
 }
 
-func displayDnsOptions(dnsConfigs []DnsConfig) {
-	fmt.Println("Available DNS Servers:")
-	for i, config := range dnsConfigs {
-		color.Yellow("%d. %s", i+1, config.Name)
+// Function to ping a DNS server with a custom timeout and return the result
+func pingDns(server string) string {
+	cmd := exec.Command("ping", "-c", "1", "-W", "2", server) // -W 2 sets the timeout to 2 seconds
+	output, err := cmd.CombinedOutput()
+
+	if err != nil {
+		return "unreachable"
 	}
-	color.Yellow("0. Exit")
+
+	// Parse the output to get the response time
+	outputStr := string(output)
+	lines := strings.Split(outputStr, "\n")
+	for _, line := range lines {
+		if strings.Contains(line, "time=") {
+			parts := strings.Split(line, "time=")
+			return fmt.Sprintf("%s ", parts[1])
+		}
+	}
+	return "unknown"
+}
+
+func displayDnsOptions(dnsConfigs []DnsConfig) {
+	// Create a new table with headers
+	t := table.New("", "DNS Server", "Ping Time")
+
+	// Add rows with line number, DNS server names, and ping results
+	color.Yellow("I am pinging the DNS server, please wait 2 seconds...")
+
+	for i, config := range dnsConfigs {
+		pingResult := pingDns(config.Servers[0]) // Assume the first server is used for pinging
+		// Add a gap (e.g., 4 spaces) between columns by formatting each column's data
+		t.AddRow(fmt.Sprintf("%d", i+1), fmt.Sprintf("%-15s", config.Name), fmt.Sprintf("%-20s", pingResult))
+	}
+
+	// Print the table with a horizontal line before the table
+	t.Print()
+
+	// Add exit option
+	fmt.Println("0. Exit")
 }
 
 func buildResolvContent(config DnsConfig) string {
