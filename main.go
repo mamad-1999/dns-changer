@@ -21,77 +21,6 @@ type DnsConfig struct {
 	Servers []string `json:"servers"`
 }
 
-func main() {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		color.Red("Error finding home directory: %s", err)
-		return
-	}
-
-	configDir := filepath.Join(homeDir, ".config", "dns-changer")
-	configPath := filepath.Join(configDir, "config.json")
-
-	// Ensure the config directory exists
-	if _, err := os.Stat(configDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(configDir, 0755); err != nil {
-			color.Red("Error creating config directory: %s", err)
-			return
-		}
-	}
-
-	// Check if config.json exists locally
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		color.Yellow("config.json not found locally. Downloading from GitHub...")
-		if err := downloadConfig(configPath); err != nil {
-			color.Red("Error downloading config.json: %s", err)
-			return
-		}
-	}
-
-	// Read the config.json file
-	data, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		color.Red("Error reading %s: %s", configPath, err)
-		return
-	}
-
-	var dnsConfigs []DnsConfig
-	if err := json.Unmarshal(data, &dnsConfigs); err != nil {
-		color.Red("Error parsing JSON: %s", err)
-		return
-	}
-
-	// Display the DNS servers with ping results
-	displayDnsOptions(dnsConfigs)
-
-	// Get user input
-	var choice int
-	fmt.Print("Select a DNS server by number: ")
-	fmt.Scan(&choice)
-
-	if choice == 0 {
-		color.Green("Exiting the program.")
-		return
-	}
-
-	if choice < 1 || choice > len(dnsConfigs) {
-		color.Red("Invalid choice. Please run the program again.")
-		return
-	}
-
-	// Build the resolv.conf content
-	selectedConfig := dnsConfigs[choice-1]
-	resolvContent := buildResolvContent(selectedConfig)
-
-	// Write to /etc/resolv.conf with sudo
-	if err := writeToResolv(resolvContent); err != nil {
-		color.Red("Error writing to /etc/resolv.conf: %s", err)
-		return
-	}
-
-	color.Green("Successfully changed DNS to %s", selectedConfig.Name)
-}
-
 // Function to ping a DNS server with a custom timeout and return the result
 func pingDns(server string) string {
 	cmd := exec.Command("ping", "-c", "1", "-W", "2", server) // -W 2 sets the timeout to 2 seconds
@@ -164,4 +93,75 @@ func downloadConfig(path string) error {
 func writeToResolv(content string) error {
 	cmd := exec.Command("sudo", "sh", "-c", fmt.Sprintf("echo '%s' > /etc/resolv.conf", content))
 	return cmd.Run()
+}
+
+func main() {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		color.Red("Error finding home directory: %s", err)
+		return
+	}
+
+	configDir := filepath.Join(homeDir, ".config", "dns-changer")
+	configPath := filepath.Join(configDir, "config.json")
+
+	// Ensure the config directory exists
+	if _, err := os.Stat(configDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			color.Red("Error creating config directory: %s", err)
+			return
+		}
+	}
+
+	// Check if config.json exists locally
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		color.Yellow("config.json not found locally. Downloading from GitHub...")
+		if err := downloadConfig(configPath); err != nil {
+			color.Red("Error downloading config.json: %s", err)
+			return
+		}
+	}
+
+	// Read the config.json file
+	data, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		color.Red("Error reading %s: %s", configPath, err)
+		return
+	}
+
+	var dnsConfigs []DnsConfig
+	if err := json.Unmarshal(data, &dnsConfigs); err != nil {
+		color.Red("Error parsing JSON: %s", err)
+		return
+	}
+
+	// Display the DNS servers with ping results
+	displayDnsOptions(dnsConfigs)
+
+	// Get user input
+	var choice int
+	fmt.Print("Select a DNS server by number: ")
+	fmt.Scan(&choice)
+
+	if choice == 0 {
+		color.Green("Exiting the program.")
+		return
+	}
+
+	if choice < 1 || choice > len(dnsConfigs) {
+		color.Red("Invalid choice. Please run the program again.")
+		return
+	}
+
+	// Build the resolv.conf content
+	selectedConfig := dnsConfigs[choice-1]
+	resolvContent := buildResolvContent(selectedConfig)
+
+	// Write to /etc/resolv.conf with sudo
+	if err := writeToResolv(resolvContent); err != nil {
+		color.Red("Error writing to /etc/resolv.conf: %s", err)
+		return
+	}
+
+	color.Green("Successfully changed DNS to %s", selectedConfig.Name)
 }
