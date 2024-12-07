@@ -7,7 +7,7 @@ import (
 )
 
 func PingDns(server string) string {
-	cmd := exec.Command("ping", "-c", "1", "-W", "2", server)
+	cmd := exec.Command("ping", "-c", "1", "-W", "1", server)
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
