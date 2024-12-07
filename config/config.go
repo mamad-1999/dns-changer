@@ -7,10 +7,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/mamad-1999/dns-changer/constants"
 	"github.com/mamad-1999/dns-changer/utils"
 )
-
-const configURL = "https://raw.githubusercontent.com/mamad-1999/dns-changer/refs/heads/master/config.json"
 
 type DnsConfig struct {
 	Name    string   `json:"name"`
@@ -33,7 +32,7 @@ func ValidateConfigFile(path string) error {
 }
 
 func DownloadConfig(path string) error {
-	resp, err := http.Get(configURL)
+	resp, err := http.Get(constants.ConfigURL)
 	utils.HandleError(err, "Failed to download config")
 
 	defer resp.Body.Close()
