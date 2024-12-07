@@ -10,30 +10,41 @@ type PingResult struct {
 	Status string // e.g., "reachable", "unreachable", "unknown"
 }
 
-func PingDns(server string) PingResult {
-	cmd := exec.Command("ping", "-c", "1", "-W", "1", server)
-	output, err := cmd.CombinedOutput()
+func PingDns(servers []string) []PingResult {
+	var results []PingResult
 
-	if err != nil {
-		return PingResult{
-			Time:   "N/A",
-			Status: "unreachable",
-		}
-	}
+	for _, server := range servers {
+		cmd := exec.Command("ping", "-c", "1", "-W", "1", server)
+		output, err := cmd.CombinedOutput()
 
-	outputStr := string(output)
-	lines := strings.Split(outputStr, "\n")
-	for _, line := range lines {
-		if strings.Contains(line, "time=") {
-			parts := strings.Split(line, "time=")
-			return PingResult{
-				Time:   parts[1],
-				Status: "reachable",
+		var pingRes PingResult
+		if err != nil {
+			pingRes = PingResult{
+				Time:   "N/A",
+				Status: "unreachable",
+			}
+		} else {
+			outputStr := string(output)
+			lines := strings.Split(outputStr, "\n")
+			for _, line := range lines {
+				if strings.Contains(line, "time=") {
+					parts := strings.Split(line, "time=")
+					pingRes = PingResult{
+						Time:   parts[1],
+						Status: "reachable",
+					}
+				}
+			}
+			if pingRes.Status == "" {
+				pingRes = PingResult{
+					Time:   "N/A",
+					Status: "unknown",
+				}
 			}
 		}
+
+		results = append(results, pingRes)
 	}
-	return PingResult{
-		Time:   "N/A",
-		Status: "unknown",
-	}
+
+	return results
 }
