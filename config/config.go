@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+
+	"github.com/mamad-1999/dns-changer/utils"
 )
 
 const configURL = "https://raw.githubusercontent.com/mamad-1999/dns-changer/refs/heads/master/config.json"
@@ -33,16 +35,20 @@ func ValidateConfigFile(path string) error {
 func DownloadConfig(path string) error {
 	resp, err := http.Get(configURL)
 	if err != nil {
+		utils.HandleError(err, "Failed to download config")
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to download config: %s", resp.Status)
+		err := fmt.Errorf("failed to download config: %s", resp.Status)
+		utils.HandleError(err, "Failed to download config")
+		return err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		utils.HandleError(err, "Failed to read response body")
 		return err
 	}
 
@@ -52,11 +58,13 @@ func DownloadConfig(path string) error {
 func LoadDnsConfigs(path string) ([]DnsConfig, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
+		utils.HandleError(err, "Failed to read DNS config file")
 		return nil, err
 	}
 
 	var dnsConfigs []DnsConfig
 	if err := json.Unmarshal(data, &dnsConfigs); err != nil {
+		utils.HandleError(err, "Failed to parse DNS config file")
 		return nil, err
 	}
 

@@ -12,33 +12,31 @@ import (
 	"github.com/mamad-1999/dns-changer/config"
 	"github.com/mamad-1999/dns-changer/display"
 	"github.com/mamad-1999/dns-changer/dns"
+	"github.com/mamad-1999/dns-changer/utils"
 )
 
 func main() {
 	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		color.Red("Error finding home directory: %s", err)
-		return
-	}
+	utils.HandleError(err, "Error finding home directory")
 
 	configDir := filepath.Join(homeDir, ".config", "dns-changer")
 	configPath := filepath.Join(configDir, "config.json")
 
 	// Ensure the config directory exists
 	if err := config.EnsureConfigDir(configDir); err != nil {
-		color.Red("Error creating config directory: %s", err)
+		utils.HandleError(err, "Error creating config directory")
 		return
 	}
 
 	// Download or validate the config.json
 	if err := config.ValidateConfigFile(configPath); err != nil {
-		color.Red("Error handling config.json: %s", err)
+		utils.HandleError(err, "Error handling config.json")
 		return
 	}
 
 	dnsConfigs, err := config.LoadDnsConfigs(configPath)
 	if err != nil {
-		color.Red("Error parsing DNS config: %s", err)
+		utils.HandleError(err, "Error parsing DNS config")
 		return
 	}
 
@@ -50,7 +48,7 @@ func main() {
 		fmt.Print("Select a DNS server by number (or 0 to exit): ")
 		input, err := reader.ReadString('\n')
 		if err != nil {
-			color.Red("Error reading input. Please try again.")
+			utils.HandleError(err, "Error reading input. Please try again.")
 			continue
 		}
 
@@ -60,7 +58,7 @@ func main() {
 		// Check if input is a number
 		choice, err = strconv.Atoi(input)
 		if err != nil {
-			color.Red("Invalid input. Please enter a valid number.")
+			utils.HandleError(err, "Invalid input. Please enter a valid number.")
 			continue
 		}
 
@@ -82,7 +80,7 @@ func main() {
 	resolvContent := dns.BuildResolvContent(selectedConfig)
 
 	if err := dns.WriteToResolv(resolvContent); err != nil {
-		color.Red("Error writing to /etc/resolv.conf: %s", err)
+		utils.HandleError(err, "Error writing to /etc/resolv.conf")
 		return
 	}
 
