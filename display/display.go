@@ -11,7 +11,11 @@ import (
 )
 
 func DisplayDnsOptions(dnsConfigs []config.DnsConfig) {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+
 	t := table.New("", "DNS Server", "Ping Time")
+	t.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	color.Yellow("I am pinging the DNS servers concurrently, please wait...")
 
 	// Channel to collect ping results
